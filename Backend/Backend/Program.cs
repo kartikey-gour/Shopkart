@@ -1,5 +1,7 @@
 
 using Backend.Data;
+using Backend.Services.Implementations;
+using Backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend
@@ -22,6 +24,8 @@ namespace Backend
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
+
+            builder.Services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
