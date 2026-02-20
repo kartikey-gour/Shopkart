@@ -22,7 +22,9 @@ namespace Backend
             //registering ApplicationDbContext with DI container
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             {
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+                .LogTo(Console.WriteLine, LogLevel.Information)
+                .EnableSensitiveDataLogging();
             });
 
             builder.Services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
