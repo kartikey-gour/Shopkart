@@ -4,6 +4,7 @@ using Backend.Enums;
 using Backend.Model;
 using Backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace Backend.Services.Implementations
 {
@@ -11,13 +12,18 @@ namespace Backend.Services.Implementations
     {
         public ApplicationDbContext _dbContext;
         public IPasswordHasher _passwordHasher;
-        public Task<AuthResponseDto> LoginAsync(LoginRequestDto dto)
+        public ITokenService _tokenService;
+
+        public async Task<AuthResponseDto> LoginAsync(LoginRequestDto dto)
         {
+            string normalizedEmail = dto.ema;
+            User user = await _dbContext.Users
+                .FirstOrDefaultAsync(u => u.Email == normalizedEmail);
         }
 
         public async Task<AuthResponseDto> RegisterAsync(RegisterRequestDto dto)
         {
-            if(dto.Password != dto.ConfirmPassword) { }
+            if (dto.Password != dto.ConfirmPassword) { }
             string normalizedEmail = dto.Email.Trim().ToLower();
             bool isExist = await _dbContext.Users.AnyAsync(u => u.Email == normalizedEmail);
 
@@ -36,6 +42,8 @@ namespace Backend.Services.Implementations
 
             _dbContext.Add(user);
             await _dbContext.SaveChangesAsync();
+
+            return new AuthResponseDto { Token = _tokenService.GenerateToken(user), Role = user.Role, Email = user.Email };
         }
     }
 }
