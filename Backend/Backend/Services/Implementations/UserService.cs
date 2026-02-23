@@ -1,10 +1,12 @@
 ﻿using Backend.Data;
 using Backend.DTOs;
 using Backend.Enums;
+using Backend.Exceptions;
 using Backend.Model;
 using Backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
+using System.Security.Authentication;
 
 namespace Backend.Services.Implementations
 {
@@ -16,9 +18,27 @@ namespace Backend.Services.Implementations
 
         public async Task<AuthResponseDto> LoginAsync(LoginRequestDto dto)
         {
-            string normalizedEmail = dto.ema;
-            User user = await _dbContext.Users
-                .FirstOrDefaultAsync(u => u.Email == normalizedEmail);
+            string normalizedEmail = dto.Email.Trim().ToLower();
+            User? user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail);
+
+            if (user == null)
+            {
+                throw new InvalidCredentialsException("Invalid creadential");
+            }
+
+            bool isValid = _passwordHasher.Verify(dto.Password, user.HashedPassword);
+
+            if (!isValid)
+                throw new InvalidCredentialsException("Invalid creadential");
+
+            string token = _tokenService.GenerateToken(user);
+
+            return new AuthResponseDto
+            {
+                Token = token,
+                Email = user.Email,
+                Role = user.Role
+            };
         }
 
         public async Task<AuthResponseDto> RegisterAsync(RegisterRequestDto dto)
