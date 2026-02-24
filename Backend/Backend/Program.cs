@@ -54,6 +54,21 @@ namespace Backend
                         ValidIssuer = jwtSettings["Issuer"],
                         ValidAudience = jwtSettings["Audience"],
                         IssuerSigningKey = new SymmetricSecurityKey(key)
+
+                        ClockSkew = TimeSpan.Zero // remove default 5 min tolerance
+                    };
+
+                    // customizing JWT error responses.
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnAuthenticationFailed = context =>
+                        {
+                            if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
+                            {
+                                context.Response.Headers.Add("Token-Expired", "true");
+                            }
+                            return Task.CompletedTask;
+                        }
                     };
                 }
             );
@@ -72,13 +87,14 @@ namespace Backend
             }
 
             app.UseHttpsRedirection();
-
+            app.UseAuthentication();
             app.UseAuthorization();
 
 
             app.MapControllers();
 
             app.Run();
+
 
         }
     }
