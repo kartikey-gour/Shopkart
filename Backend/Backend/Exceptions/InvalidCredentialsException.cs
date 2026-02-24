@@ -1,7 +1,7 @@
 ﻿namespace Backend.Exceptions
 {
     [Serializable]
-    internal class InvalidCredentialsException : Exception
+    public class InvalidCredentialsException : AppException
     {
         public InvalidCredentialsException(string? message) : base(message){}
     }
