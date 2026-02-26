@@ -6,6 +6,7 @@ using Backend.Model;
 using Backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
+using System.Net;
 using System.Security.Authentication;
 
 namespace Backend.Services.Implementations
@@ -23,13 +24,13 @@ namespace Backend.Services.Implementations
 
             if (user == null)
             {
-                throw new InvalidCredentialsException("Invalid creadential");
+                throw new InvalidCredentialsException();
             }
 
             bool isValid = _passwordHasher.Verify(dto.Password, user.HashedPassword);
 
             if (!isValid)
-                throw new InvalidCredentialsException("Invalid creadential");
+                throw new InvalidCredentialsException();
 
             string token = _tokenService.GenerateToken(user);
 
@@ -43,11 +44,13 @@ namespace Backend.Services.Implementations
 
         public async Task<AuthResponseDto> RegisterAsync(RegisterRequestDto dto)
         {
-            if (dto.Password != dto.ConfirmPassword) { }
+            if (dto.Password != dto.ConfirmPassword)
+                throw new PasswordMismatchException();
             string normalizedEmail = dto.Email.Trim().ToLower();
             bool isExist = await _dbContext.Users.AnyAsync(u => u.Email == normalizedEmail);
 
-            if (isExist) { }
+            if (isExist)
+                throw new UserAlreadyExistsException();
 
             string hashedPassword = _passwordHasher.Hash(dto.Password);
 

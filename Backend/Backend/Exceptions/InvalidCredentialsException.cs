@@ -1,8 +1,10 @@
-﻿namespace Backend.Exceptions
+﻿using System.Net;
+
+namespace Backend.Exceptions
 {
     [Serializable]
     public class InvalidCredentialsException : AppException
     {
-        public InvalidCredentialsException(string? message) : base(message){}
+        public InvalidCredentialsException() : base(HttpStatusCode.Unauthorized, "INVALID_CREDENTIALS", "Invalid email or password.") {}
     }
 }
