@@ -1,8 +1,11 @@
 
 using Backend.Data;
+using Backend.DTOs;
+using Backend.Middleware;
 using Backend.Services.Implementations;
 using Backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -53,7 +56,7 @@ namespace Backend
 
                         ValidIssuer = jwtSettings["Issuer"],
                         ValidAudience = jwtSettings["Audience"],
-                        IssuerSigningKey = new SymmetricSecurityKey(key)
+                        IssuerSigningKey = new SymmetricSecurityKey(key),
 
                         ClockSkew = TimeSpan.Zero // remove default 5 min tolerance
                     };
@@ -73,6 +76,21 @@ namespace Backend
                 }
             );
 
+            builder.Services.Configure<ApiBehaviorOptions>(options =>
+            {
+                options.InvalidModelStateResponseFactory = context =>
+                {
+                    var traceId = context.HttpContext.TraceIdentifier;
+
+                    ErrorResponseDto response = new ErrorResponseDto
+                    (
+                        "VALIDATION_ERROR",  "Validation failed.", traceId
+                    );
+
+                    return new BadRequestObjectResult(response);
+                };
+            });
+
             builder.Services.AddSingleton<ITokenService, TokenService>();
             builder.Services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
             builder.Services.AddScoped<IUserService, UserService>();
@@ -85,17 +103,14 @@ namespace Backend
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseAuthorization();
-
-
             app.MapControllers();
 
+
             app.Run();
-
-
         }
     }
 }
