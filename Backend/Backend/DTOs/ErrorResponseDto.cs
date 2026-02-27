@@ -4,8 +4,8 @@
     {
         public ErrorResponseDto(string message, string errorCode, string traceIdentifier)
         {
-            Message = message;
             Code = errorCode;
+            Message = message;
             TraceId = traceIdentifier;
         }
 

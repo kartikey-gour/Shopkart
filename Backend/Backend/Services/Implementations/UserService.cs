@@ -17,6 +17,12 @@ namespace Backend.Services.Implementations
         public IPasswordHasher _passwordHasher;
         public ITokenService _tokenService;
 
+        public UserService(ApplicationDbContext dbContext, IPasswordHasher passwordHasher, ITokenService tokenService)
+        {
+            _dbContext = dbContext;
+            _passwordHasher = passwordHasher;
+            _tokenService = tokenService;
+        }
         public async Task<AuthResponseDto> LoginAsync(LoginRequestDto dto)
         {
             string normalizedEmail = dto.Email.Trim().ToLower();
